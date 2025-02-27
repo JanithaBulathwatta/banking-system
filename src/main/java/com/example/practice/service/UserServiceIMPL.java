@@ -2,6 +2,7 @@ package com.example.practice.service;
 
 import com.example.practice.dto.AccountInfo;
 import com.example.practice.dto.BankResponse;
+import com.example.practice.dto.MailDetails;
 import com.example.practice.dto.UserDTO;
 import com.example.practice.entity.User;
 import com.example.practice.repository.UserRepository;
@@ -16,6 +17,9 @@ public class UserServiceIMPL implements UserService {
 
     @Autowired
     UserRepository userRepository;
+
+    @Autowired
+    MailService mailService;
 
     @Override
     public BankResponse createAccount(UserDTO userDTO) {
@@ -44,6 +48,17 @@ public class UserServiceIMPL implements UserService {
                 .build();
 
         User savedUser = userRepository.save(newUser);
+
+        MailDetails mailDetails = MailDetails.builder()
+                .recipient(savedUser.getEmail())
+                .subject("New Account Created")
+                .messageBody("congrats your account has been created.\n your account details: \n" +
+                        "Account Name: " + savedUser.getFirstName() + " " + savedUser.getLastName() + "\n" +
+                        "Account Number: "+savedUser.getAccountNumber())
+                .build();
+
+        mailService.sendEmailAlert(mailDetails);
+
         return BankResponse.builder()
                 .responseCode(AccountUtils.ACCOUNT_CREATION_SUCCESS)
                 .responseMessage(AccountUtils.ACCOUNT_CREATION_MESSAGE)
