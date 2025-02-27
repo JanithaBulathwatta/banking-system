@@ -1,9 +1,6 @@
 package com.example.practice.service;
 
-import com.example.practice.dto.AccountInfo;
-import com.example.practice.dto.BankResponse;
-import com.example.practice.dto.MailDetails;
-import com.example.practice.dto.UserDTO;
+import com.example.practice.dto.*;
 import com.example.practice.entity.User;
 import com.example.practice.repository.UserRepository;
 import com.example.practice.ustils.AccountUtils;
@@ -69,4 +66,42 @@ public class UserServiceIMPL implements UserService {
                         .build())
                 .build();
     }
+
+    @Override
+    public BankResponse balanceEnquiry(EnquiryRequest request) {
+
+        //check if the provided account number exists in the db
+        boolean isAccountExists = userRepository.existsByAccountNumber(request.getAccountNumber());
+        if(!isAccountExists) {
+            return BankResponse.builder()
+                    .responseCode(AccountUtils.ACCOUNT_NOT_EXITS_CODE)
+                    .responseMessage(AccountUtils.ACCOUNT_NOT_EXITS_MESSAGE)
+                    .accountInfo(null)
+                    .build();
+        }
+
+        User foundUser = userRepository.findByAccountNumber(request.getAccountNumber());
+        return BankResponse.builder()
+                .responseCode(AccountUtils.ACCOUNT_FOUND_CODE)
+                .responseMessage(AccountUtils.ACCOUNT_FOUND_SUCCESS_MESSAGE)
+                .accountInfo(AccountInfo.builder()
+                        .accountBalance(foundUser.getAccountBalance())
+                        .accountNumber(foundUser.getAccountNumber())
+                        .accountName(foundUser.getFirstName() + " " + foundUser.getLastName())
+                        .build())
+                .build();
+
+    }
+
+    @Override
+    public String nameEnquiry(EnquiryRequest request) {
+
+        boolean isAccountExists = userRepository.existsByAccountNumber(request.getAccountNumber());
+        if(!isAccountExists) {
+            return AccountUtils.ACCOUNT_NOT_EXITS_MESSAGE;
+        }
+        User foundUser = userRepository.findByAccountNumber(request.getAccountNumber());
+        return foundUser.getFirstName() + " " + foundUser.getLastName();
+    }
+
 }
