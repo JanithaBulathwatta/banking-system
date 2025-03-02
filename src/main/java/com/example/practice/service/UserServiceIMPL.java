@@ -173,4 +173,67 @@ public class UserServiceIMPL implements UserService {
 
     }
 
+    @Override
+    public BankResponse transfer(TransferDTO transferDTO) {
+        //get the account to debit
+        //check if the amount im debiting in not more than current balance
+        //debit the account
+        //credit the account
+
+        boolean isDestinationAccountExists = userRepository.existsByAccountNumber(transferDTO.getDestinationAccountNumber());
+
+        if(!isDestinationAccountExists) {
+            return BankResponse.builder()
+                    .responseCode(AccountUtils.ACCOUNT_NOT_EXITS_CODE)
+                    .responseMessage(AccountUtils.ACCOUNT_NOT_EXITS_MESSAGE)
+                    .accountInfo(null)
+                    .build();
+        }
+
+        User sourceAccount = userRepository.findByAccountNumber(transferDTO.getSourceAccountNumber());
+        if(transferDTO.getAmount().compareTo(sourceAccount.getAccountBalance()) > 0){
+            return BankResponse.builder()
+                    .responseCode(AccountUtils.INSUFFICIENT_BALANCE_CODE)
+                    .responseMessage(AccountUtils.INSUFFICIENT_BALANCE_MESSAGE)
+                    .accountInfo(null)
+                    .build();
+
+        }
+
+        sourceAccount.setAccountBalance(sourceAccount.getAccountBalance().subtract(transferDTO.getAmount()));
+        String sourceUserName = sourceAccount.getFirstName()+" "+sourceAccount.getLastName();
+        userRepository.save(sourceAccount);
+        MailDetails debitAlert = MailDetails.builder()
+                .subject("Debit alert")
+                .recipient(sourceAccount.getEmail())
+                .messageBody("The sum of " + transferDTO.getAmount() + " has been deducted from your account \n" +"your current account balance is "+sourceAccount.getAccountBalance())
+                .build();
+
+        mailService.sendEmailAlert(debitAlert);
+
+        User destinationAccount = userRepository.findByAccountNumber(transferDTO.getDestinationAccountNumber());
+        destinationAccount.setAccountBalance(destinationAccount.getAccountBalance().add(transferDTO.getAmount()));
+        //String recipientName = destinationAccount.getFirstName()+" "+destinationAccount.getLastName();
+        userRepository.save(destinationAccount);
+
+        MailDetails creditAlert = MailDetails.builder()
+                .subject("credit alert")
+                .recipient(destinationAccount.getEmail())
+                .messageBody("The sum of " + transferDTO.getAmount() + " has been sent to your account form " +sourceUserName+" your current account balance is "+destinationAccount.getAccountBalance())
+                .build();
+
+        mailService.sendEmailAlert(creditAlert);
+
+        return BankResponse.builder()
+                .responseCode(AccountUtils.TRANSFER_SUCCESS_CODE)
+                .responseMessage(AccountUtils.TRANSFER_SUCCESS_MESSAGE)
+                .accountInfo(null)
+                .build();
+
+
+
+
+
+    }
+
 }
