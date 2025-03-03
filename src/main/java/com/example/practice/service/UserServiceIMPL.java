@@ -202,6 +202,7 @@ public class UserServiceIMPL implements UserService {
 
         sourceAccount.setAccountBalance(sourceAccount.getAccountBalance().subtract(transferDTO.getAmount()));
         String sourceUserName = sourceAccount.getFirstName()+" "+sourceAccount.getLastName();
+
         userRepository.save(sourceAccount);
         MailDetails debitAlert = MailDetails.builder()
                 .subject("Debit alert")
