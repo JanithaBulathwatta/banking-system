@@ -24,4 +24,9 @@ public class BankStatementIMPL {
         return transactionsList;
 
     }
+
+    private void designStatement(List<Transaction> transactions){
+
+
+    }
 }

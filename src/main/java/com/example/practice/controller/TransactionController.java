@@ -18,7 +18,7 @@ public class TransactionController {
 
     private BankStatementIMPL bankStatementIMPL;
 
-    @GetMapping
+    @GetMapping("/statement")
     public List<Transaction> generateBankStatement(@RequestParam String accountNumber,@RequestParam String startDate, @RequestParam String endDate ){
 
         return bankStatementIMPL.generateStatement(accountNumber,startDate,endDate);
